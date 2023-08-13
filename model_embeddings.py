@@ -9,7 +9,7 @@ Sahil Chopra <schopra8@stanford.edu>
 Anand Dhoot <anandd@stanford.edu>
 Vera Lin <veralin@stanford.edu>
 """
-
+import torch.nn
 import torch.nn as nn
 
 class ModelEmbeddings(nn.Module): 
@@ -51,7 +51,6 @@ class ModelEmbeddings(nn.Module):
         ### Use the following docs to properly initialize these variables:
         ###     Embedding Layer:
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Embedding
-        
-
-
+        self.source = torch.nn.Embedding(len(vocab.src), self.embed_size, sparse=True)
+        self.target = torch.nn.Embedding(len(vocab.tgt), self.embed_size, sparse=True)
         ### END YOUR CODE
