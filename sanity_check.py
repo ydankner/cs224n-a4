@@ -183,6 +183,7 @@ def question_1f_sanity_check(model, src_sents, tgt_sents, vocab):
     """ Sanity check for question 1f. 
         Compares student output to that of model with dummy data.
     """
+    model.eval()
     print ("-"*80)
     print("Running Sanity Check for Question 1f: Step")
     print ("-"*80)
@@ -216,6 +217,7 @@ def question_1f_sanity_check(model, src_sents, tgt_sents, vocab):
     print ("-"*80)    
     print("All Sanity Checks Passed for Question 1f: Step!")
     print ("-"*80)
+    model.train()
 
 
 def sanity_read_corpus(file_path, source):

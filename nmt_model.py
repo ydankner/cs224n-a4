@@ -252,14 +252,9 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.stack
         enc_hiddens_proj = self.att_projection(enc_hiddens)
         Y = self.model_embeddings.target(target_padded)
-
-        #y_t = <start token embedding>
-        # Split the necessary tensors?
-        for Y_t in torch.split(Y, 1):
+        for Y_t in Y:
             prev_dec_state = dec_state
-
-            Y_t_squeezed = torch.squeeze(Y_t)
-            Ybar_T = torch.concat((Y_t_squeezed, o_prev), dim=1)
+            Ybar_T = torch.concat((Y_t, o_prev), dim=1)
 
             # Use decoder's step to calculate ht_dec and ct_dec from Ybar_T
             dec_state, o_curr, _ = self.step(Ybar_T, prev_dec_state, enc_hiddens, enc_hiddens_proj, enc_masks)
@@ -324,10 +319,10 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.unsqueeze
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/torch.html#torch.squeeze
+        dec_state = self.decoder(Ybar_t, dec_state)
 
-
-
-
+        dec_hidden, dec_cell = dec_state
+        e_t = torch.squeeze(torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden, 2)))  # x enc_hidden_proj(b, src_len, h) x dec_hidden(b, h, 1)
         ### END YOUR CODE
 
         # Set e_t to -inf where enc_masks has 1
@@ -361,11 +356,12 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tanh:
         ###         https://pytorch.org/docs/stable/torch.html#torch.tanh
-
-
-
-
-
+        alpha_t = torch.nn.functional.softmax(e_t, dim=1)  # Of shape (b, src_len)
+        a_t_unsqueezed = torch.bmm(torch.unsqueeze(alpha_t, 1), enc_hiddens)  # Of shape (b, 1, src_len) x (b, src_len, 2*h) = (b, 1, 2*h)
+        a_t = torch.squeeze(a_t_unsqueezed)  # Of shape (b, 2*h)
+        u_t = torch.concat((a_t, dec_hidden), dim=1)  # shape = (b, 3h)
+        V_t = self.combined_output_projection(u_t)  # shape = (b, h)
+        O_t = self.dropout(torch.tanh(V_t))
         ### END YOUR CODE
 
         combined_output = O_t
